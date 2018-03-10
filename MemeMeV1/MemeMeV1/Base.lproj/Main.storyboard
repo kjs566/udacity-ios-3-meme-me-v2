@@ -36,15 +36,35 @@
                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="K4v-qh-rh1">
                                 <rect key="frame" x="0.0" y="64" width="375" height="559"/>
                             </imageView>
+                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="Meme top" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="Ypz-R9-T0a" userLabel="Top Text">
+                                <rect key="frame" x="0.0" y="107" width="375" height="17"/>
+                                <color key="backgroundColor" white="1" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="textColor"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
+                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="Meme bottom" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="4uX-gw-uXq" userLabel="Bottom Text">
+                                <rect key="frame" x="0.0" y="546" width="375" height="17"/>
+                                <color key="backgroundColor" white="1" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="textColor"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
+                            <constraint firstItem="Ypz-R9-T0a" firstAttribute="width" secondItem="K4v-qh-rh1" secondAttribute="width" id="0kN-Wi-Z2n"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="K4v-qh-rh1" secondAttribute="trailing" id="8uf-Vu-Nf4"/>
+                            <constraint firstItem="4uX-gw-uXq" firstAttribute="width" secondItem="K4v-qh-rh1" secondAttribute="width" id="Lid-sk-7cu"/>
+                            <constraint firstItem="4uX-gw-uXq" firstAttribute="bottom" secondItem="K4v-qh-rh1" secondAttribute="bottom" constant="-60" id="QlI-aW-ASZ"/>
+                            <constraint firstItem="K4v-qh-rh1" firstAttribute="top" secondItem="Ypz-R9-T0a" secondAttribute="bottom" constant="-60" id="W6i-H4-u8t"/>
                             <constraint firstItem="TSE-qs-PaW" firstAttribute="top" secondItem="K4v-qh-rh1" secondAttribute="bottom" id="Ztb-wE-jHT"/>
                             <constraint firstItem="K4v-qh-rh1" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="d04-kl-bdU"/>
+                            <constraint firstItem="Ypz-R9-T0a" firstAttribute="centerX" secondItem="K4v-qh-rh1" secondAttribute="centerX" id="dmf-jd-HNg"/>
                             <constraint firstItem="TSE-qs-PaW" firstAttribute="bottom" secondItem="6Tk-OE-BBY" secondAttribute="bottom" id="fxd-Ue-6DP"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="TSE-qs-PaW" secondAttribute="trailing" id="jk2-pI-LT9"/>
                             <constraint firstItem="TSE-qs-PaW" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="kPs-uc-edr"/>
+                            <constraint firstItem="4uX-gw-uXq" firstAttribute="centerX" secondItem="K4v-qh-rh1" secondAttribute="centerX" id="xII-Zh-wJE"/>
                             <constraint firstItem="K4v-qh-rh1" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="yqz-k5-GmW"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
