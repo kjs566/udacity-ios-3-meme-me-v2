@@ -41,14 +41,14 @@
                                 <color key="backgroundColor" white="1" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="textColor"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="allCharacters"/>
                             </textField>
-                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="Meme bottom" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="4uX-gw-uXq" userLabel="Bottom Text">
+                            <textField opaque="NO" tag="1" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="Meme bottom" textAlignment="center" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="4uX-gw-uXq" userLabel="Bottom Text">
                                 <rect key="frame" x="0.0" y="546" width="375" height="17"/>
                                 <color key="backgroundColor" white="1" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <nil key="textColor"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="allCharacters"/>
                             </textField>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -71,8 +71,10 @@
                     </view>
                     <navigationItem key="navigationItem" title="MemeMe" id="xss-Ia-2Bd"/>
                     <connections>
+                        <outlet property="bottomText" destination="4uX-gw-uXq" id="pfD-Im-lF2"/>
                         <outlet property="cameraButton" destination="zUx-5Q-PVH" id="HdJ-e1-coS"/>
                         <outlet property="imageView" destination="K4v-qh-rh1" id="7zL-BD-Ip0"/>
+                        <outlet property="topText" destination="Ypz-R9-T0a" id="0re-qK-sUk"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>

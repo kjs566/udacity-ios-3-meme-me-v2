@@ -7,13 +7,48 @@
 //
 
 import UIKit
+import Foundation
 
 class MainViewController: UIViewController {
     @IBOutlet weak var imageView: UIImageView!
     @IBOutlet weak var cameraButton: UIBarButtonItem!
+    @IBOutlet weak var topText: UITextField!
+    @IBOutlet weak var bottomText: UITextField!
+    
+    enum TextTypes: Int{
+        case top = 0, bottom
+    }
+    
+    let memeTextAttributes: [String : Any] = [
+        NSAttributedStringKey.strokeColor.rawValue: UIColor.black,
+        NSAttributedStringKey.foregroundColor.rawValue: UIColor.white,
+        NSAttributedStringKey.font.rawValue: UIFont(name: "HelveticaNeue-CondensedBlack", size: 40)!,
+        NSAttributedStringKey.strokeWidth.rawValue: 1.5]
+    
+    let defaultTexts = [
+        TextTypes.top: "TOP",
+        TextTypes.bottom: "BOTTOM"
+    ]
+    
+    lazy var texts = [
+        TextTypes.top: topText,
+        TextTypes.bottom: bottomText
+    ]
+    
+    let defaultTop = ""
+    let defaultBottom = ""
     
     override func viewWillAppear(_ animated: Bool) {
         cameraButton.isEnabled = UIImagePickerController.isSourceTypeAvailable(.camera)
+    }
+    
+    override func viewDidLoad() {
+        texts.forEach { (key, view) in
+            view?.text = defaultTexts[key]
+            view?.delegate = self
+            view?.defaultTextAttributes = memeTextAttributes
+            view?.textAlignment = .center
+        }
     }
 }
 
@@ -47,6 +82,21 @@ extension MainViewController: UIImagePickerControllerDelegate, UINavigationContr
     /// Called when image picker is canceled
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         dismiss(animated: true, completion: nil)
+    }
+}
+
+// MARK: - UITextFieldDelegate
+extension MainViewController: UITextFieldDelegate{
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        let type = TextTypes(rawValue: textField.tag) ?? .top
+        if textField.text == defaultTexts[type] {
+            textField.text = ""
+        }
+    }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        view.endEditing(true)
+        return true
     }
 }
 
