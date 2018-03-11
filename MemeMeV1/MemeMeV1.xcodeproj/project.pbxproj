@@ -13,6 +13,7 @@
 		5653571420542E8700857C9B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5653571320542E8700857C9B /* Assets.xcassets */; };
 		5653571720542E8700857C9B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 5653571520542E8700857C9B /* LaunchScreen.storyboard */; };
 		5653571F205499A700857C9B /* Meme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5653571E205499A700857C9B /* Meme.swift */; };
+		565357212055329D00857C9B /* AboutViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565357202055329C00857C9B /* AboutViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,7 @@
 		5653571620542E8700857C9B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		5653571820542E8800857C9B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		5653571E205499A700857C9B /* Meme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Meme.swift; sourceTree = "<group>"; };
+		565357202055329C00857C9B /* AboutViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AboutViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +58,7 @@
 		5653570B20542E8700857C9B /* MemeMeV1 */ = {
 			isa = PBXGroup;
 			children = (
+				565357202055329C00857C9B /* AboutViewController.swift */,
 				5653570C20542E8700857C9B /* AppDelegate.swift */,
 				5653570E20542E8700857C9B /* MemeEditorViewController.swift */,
 				5653571020542E8700857C9B /* Main.storyboard */,
@@ -141,6 +144,7 @@
 			files = (
 				5653571F205499A700857C9B /* Meme.swift in Sources */,
 				5653570F20542E8700857C9B /* MemeEditorViewController.swift in Sources */,
+				565357212055329D00857C9B /* AboutViewController.swift in Sources */,
 				5653570D20542E8700857C9B /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

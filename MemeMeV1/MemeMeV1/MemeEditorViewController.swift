@@ -12,18 +12,22 @@ import Foundation
 class MemeEditorViewController: UIViewController {
     @IBOutlet weak var imageView: UIImageView!
     @IBOutlet weak var cameraButton: UIBarButtonItem!
-    @IBOutlet weak var topText: UITextField!
-    @IBOutlet weak var bottomText: UITextField!
+    @IBOutlet weak var cameraButton2: UIButton!
     
+    @IBOutlet weak var topField: UITextField!
+    @IBOutlet weak var bottomField: UITextField!
+    @IBOutlet weak var shareButton: UIBarButtonItem!
+    @IBOutlet weak var bottomBar: UIToolbar!
+    @IBOutlet weak var noImageOverview: UIView!
     enum TextTypes: Int{
         case top = 0, bottom
     }
     
     let memeTextAttributes: [String : Any] = [
-        NSAttributedStringKey.strokeColor.rawValue: UIColor.black,
         NSAttributedStringKey.foregroundColor.rawValue: UIColor.white,
+        NSAttributedStringKey.strokeColor.rawValue: UIColor.black,
         NSAttributedStringKey.font.rawValue: UIFont(name: "HelveticaNeue-CondensedBlack", size: 40)!,
-        NSAttributedStringKey.strokeWidth.rawValue: 1.5]
+        NSAttributedStringKey.strokeWidth.rawValue: -1.5]
     
     let defaultTexts = [
         TextTypes.top: "TOP",
@@ -31,24 +35,29 @@ class MemeEditorViewController: UIViewController {
     ]
     
     lazy var texts = [
-        TextTypes.top: topText,
-        TextTypes.bottom: bottomText
+        TextTypes.top: topField,
+        TextTypes.bottom: bottomField
     ]
     
-    let defaultTop = ""
-    let defaultBottom = ""
-    
     override func viewWillAppear(_ animated: Bool) {
-        cameraButton.isEnabled = UIImagePickerController.isSourceTypeAvailable(.camera)
+        if !hasDeviceCamera(){
+            cameraButton.isEnabled = false
+            cameraButton2.isEnabled = false
+        }
         subscribeToKeyboardShowStateChangedNotification()
+    }
+    
+    func hasDeviceCamera() -> Bool{
+        return UIImagePickerController.isSourceTypeAvailable(.camera)
     }
     
     override func viewDidLoad() {
         texts.forEach { (key, view) in
-            view?.text = defaultTexts[key]
             view?.delegate = self
             view?.defaultTextAttributes = memeTextAttributes
+            view?.textColor = UIColor.white
             view?.textAlignment = .center
+            view?.text = defaultTexts[key]
         }
     }
     
@@ -56,13 +65,15 @@ class MemeEditorViewController: UIViewController {
         unsubscribeToKeyboardShowStateChangedNotification()
     }
     
-    func saveMeme(){
+    func createMeme() -> Meme{
         let memedImage = generateMemedImage()
-        let meme = Meme(topText: topText, bottomText: bottomText, originalImage: imageView.image!, memedImage: memedImage)
+        let meme = Meme(topText: topField?.text ?? "", bottomText: bottomField?.text ?? "", originalImage: imageView.image!, memedImage: memedImage)
+        
+        return meme
     }
     
     func generateMemedImage() -> UIImage {
-        //TODO: HIDE TOOLBAR AND NAVBAR
+        bottomBar.isHidden = true
         
         // Render view to an image
         UIGraphicsBeginImageContext(self.view.frame.size)
@@ -70,9 +81,27 @@ class MemeEditorViewController: UIViewController {
         let memedImage:UIImage = UIGraphicsGetImageFromCurrentImageContext()!
         UIGraphicsEndImageContext()
         
-        //TODO SHOW TOOLBAR AND NAVBAR
+        bottomBar.isHidden = false
         
         return memedImage
+    }
+    
+    func hideNoImageOverlay(){
+        let view = noImageOverview
+        UIView.animate(withDuration: 0.5, animations: {
+            view?.alpha = 0.0
+            return
+        })
+    }
+    
+    @IBAction func shareClicked(_ sender: Any) {
+        let meme = createMeme()
+        
+        let sharingItems = [ meme ]
+        let activityViewController = UIActivityViewController(activityItems: sharingItems, applicationActivities: nil)
+        activityViewController.popoverPresentationController?.sourceView = self.view
+        
+        self.present(activityViewController, animated: true, completion: nil)
     }
 }
 
@@ -85,7 +114,7 @@ extension MemeEditorViewController: UIImagePickerControllerDelegate, UINavigatio
         present(pickerController, animated: true, completion: nil)
     }
     
-    @IBAction func pickAnImageFromCamera(_ sender: Any) {
+    @IBAction func pickImageFromCamera(_ sender: Any) {
         let pickerController = UIImagePickerController()
         pickerController.delegate = self
         pickerController.sourceType = .camera
@@ -99,7 +128,7 @@ extension MemeEditorViewController: UIImagePickerControllerDelegate, UINavigatio
         let image = info[UIImagePickerControllerOriginalImage] as? UIImage
         imageView.image = image
         
-        dismiss(animated: true, completion: nil)
+        dismiss(animated: true, completion: hideNoImageOverlay)
     }
     
     

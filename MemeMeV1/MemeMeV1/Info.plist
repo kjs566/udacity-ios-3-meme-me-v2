@@ -45,5 +45,7 @@
 	<string>Needs to use camera for allowing taking picture that will be used for meme.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Needs to use photo library to choose image that will be used for meme.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Needs to add photos to enable saving of creating meme.</string>
 </dict>
 </plist>
