@@ -13,7 +13,7 @@
         <!--MemeMe-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="MainViewController" customModule="MemeMeV1" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="BYZ-38-t0r" customClass="MemeEditorViewController" customModule="MemeMeV1" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -31,6 +31,7 @@
                                             <action selector="pickAnImageFromCamera:" destination="BYZ-38-t0r" id="BYc-mh-kn9"/>
                                         </connections>
                                     </barButtonItem>
+                                    <barButtonItem title="Item" id="dDl-hc-34y"/>
                                 </items>
                             </toolbar>
                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="K4v-qh-rh1">
@@ -69,7 +70,10 @@
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
-                    <navigationItem key="navigationItem" title="MemeMe" id="xss-Ia-2Bd"/>
+                    <navigationItem key="navigationItem" title="MemeMe" largeTitleDisplayMode="never" id="xss-Ia-2Bd">
+                        <barButtonItem key="leftBarButtonItem" title="About" id="9JG-6T-u2J"/>
+                        <barButtonItem key="rightBarButtonItem" title="Share" id="CTw-4s-wXT"/>
+                    </navigationItem>
                     <connections>
                         <outlet property="bottomText" destination="4uX-gw-uXq" id="pfD-Im-lF2"/>
                         <outlet property="cameraButton" destination="zUx-5Q-PVH" id="HdJ-e1-coS"/>
@@ -84,6 +88,7 @@
         <!--Navigation Controller-->
         <scene sceneID="WkF-3C-P7e">
             <objects>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="ASF-Bk-HLo" userLabel="First Responder" sceneMemberID="firstResponder"/>
                 <navigationController id="zgC-PP-Pq6" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="Q6S-zf-NzB">
                         <rect key="frame" x="0.0" y="20" width="375" height="44"/>
@@ -93,7 +98,6 @@
                         <segue destination="BYZ-38-t0r" kind="relationship" relationship="rootViewController" id="WUf-Rl-TnS"/>
                     </connections>
                 </navigationController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="ASF-Bk-HLo" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-692" y="132"/>
         </scene>
