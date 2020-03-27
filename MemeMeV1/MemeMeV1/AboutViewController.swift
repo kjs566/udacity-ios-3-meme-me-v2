@@ -17,8 +17,8 @@ class AboutViewController: UIViewController {
     
     var currentSegment = 0;
     let aboutTexts = [
-        0: "Hi, my name is Jan Skála.\n\nI'm currently studying Artificial Intelligence at Czech Technical Univercity in Prague and working as Android and hybrid app developer at CGI.\n\nMy hobies are squash, programming and biking.  In the mean time I'm learning new stuff - and that's the reason why this app was created.\n\nHope you will enjoy it!",
-        1: "This app was created as the first project during Udacity's iOS Developer Nanodegree program.\n\nThe purpose doing this app was to learn basic stuff from iOS development framework and basics of XCode IDE. It is not intended to be published to users."
+        0: "Hi, my name is Jan Skála.\n\nMy hobbies are squash, programming and biking. I've been working as an Android developer for nearly 5 years.\n\nAnd now I'm trying a new platform - that's why this app was created.\n\nHope you will enjoy it!",
+        1: "This app was created as the second project during Udacity's iOS Developer Nanodegree program.\n\nThe purpose doing this app was to learn to work with components from iOS development framework and basics of XCode IDE. It is not intended to be published to users."
     ]
     
     override func viewDidLoad() {

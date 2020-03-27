@@ -17,26 +17,18 @@ class MemeEditorViewController: UIViewController {
     @IBOutlet weak var topField: UITextField!
     @IBOutlet weak var bottomField: UITextField!
     @IBOutlet weak var shareButton: UIBarButtonItem!
+    @IBOutlet weak var cancelButton: UIBarButtonItem!
     @IBOutlet weak var bottomBar: UIToolbar!
     @IBOutlet weak var noImageOverview: UIView!
-    enum TextTypes: Int{
-        case top = 0, bottom
-    }
     
-    let memeTextAttributes: [String : Any] = [
-        NSAttributedStringKey.foregroundColor.rawValue: UIColor.white,
-        NSAttributedStringKey.strokeColor.rawValue: UIColor.black,
-        NSAttributedStringKey.font.rawValue: UIFont(name: "HelveticaNeue-CondensedBlack", size: 40)!,
-        NSAttributedStringKey.strokeWidth.rawValue: -1.5]
+    var backgroundColor = MemeColor.availableColors[.white]!
+    var editingTopField = false
     
-    let defaultTexts = [
-        TextTypes.top: "TOP",
-        TextTypes.bottom: "BOTTOM"
-    ]
+    lazy var memeTextViews = [ topField, bottomField ]
     
-    lazy var texts = [
-        TextTypes.top: topField,
-        TextTypes.bottom: bottomField
+    lazy var memeTexts : [MemeText: UITextField] = [
+        MemeText(viewIdentifier: topField!.accessibilityIdentifier! ,position: .top) : topField,
+        MemeText(viewIdentifier: bottomField!.accessibilityIdentifier!, position: .bottom) : bottomField
     ]
     
     override func viewWillAppear(_ animated: Bool) {
@@ -44,7 +36,7 @@ class MemeEditorViewController: UIViewController {
             cameraButton.isEnabled = false
             cameraButton2.isEnabled = false
         }
-        subscribeToKeyboardShowStateChangedNotification()
+        subscribeKeyboardShowHide()
     }
     
     func hasDeviceCamera() -> Bool{
@@ -52,33 +44,30 @@ class MemeEditorViewController: UIViewController {
     }
     
     override func viewDidLoad() {
-        texts.forEach { (key, view) in
-            view?.delegate = self
-            view?.defaultTextAttributes = memeTextAttributes
-            view?.textColor = UIColor.white
-            view?.textAlignment = .center
-            view?.text = defaultTexts[key]
-        }
+        startOver()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
-        unsubscribeToKeyboardShowStateChangedNotification()
+        unsubscribeKeyboardShowHide()
     }
     
-    func createMeme() -> Meme{
+    func createMeme() -> Meme?{
         let memedImage = generateMemedImage()
-        let meme = Meme(topText: topField?.text ?? "", bottomText: bottomField?.text ?? "", originalImage: imageView.image!, memedImage: memedImage)
+        if(memedImage == nil || imageView.image == nil){
+            return nil
+        }
+        let meme = Meme(texts: Array(memeTexts.keys), originalImage: imageView.image!, memedImage: memedImage!)
         
         return meme
     }
     
-    func generateMemedImage() -> UIImage {
+    func generateMemedImage() -> UIImage? {
         bottomBar.isHidden = true
         
         // Render view to an image
         UIGraphicsBeginImageContext(self.view.frame.size)
         view.drawHierarchy(in: self.view.frame, afterScreenUpdates: true)
-        let memedImage:UIImage = UIGraphicsGetImageFromCurrentImageContext()!
+        let memedImage: UIImage? = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
         
         bottomBar.isHidden = false
@@ -92,16 +81,182 @@ class MemeEditorViewController: UIViewController {
             view?.alpha = 0.0
             return
         })
+        shareButton.isEnabled = true
+        cancelButton.isEnabled = true
+    }
+    
+    func showNoImageOverlay(){
+        let view = noImageOverview
+        UIView.animate(withDuration: 0.5, animations: {
+            view?.alpha = 1.0
+            return
+        })
+    }
+    
+    func startOverClicked(){
+        let startOverAlert = UIAlertController(title: "Do you realy want to start over?", message: "Your current progress will be deleted.", preferredStyle: .alert)
+    
+        let startOverAction = UIAlertAction(title: "Start over", style: .destructive) { (UIAlertAction) in
+            self.startOver()
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        startOverAlert.addAction(cancelAction)
+        startOverAlert.addAction(startOverAction)
+        self.present(startOverAlert, animated: true, completion: nil)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if(segue.destination is ChooseColorViewController && sender is
+            MemeColor.ColorFor){
+            let vc = segue.destination as! ChooseColorViewController
+            let colorFor = sender as! MemeColor.ColorFor
+            var selectedColor : MemeColor.ColorIdentifier = .white
+            switch colorFor {
+            case .background:
+                selectedColor = backgroundColor.identifier
+            case .fontColor(texts: let memeTexts):
+                selectedColor = memeTexts.first!.textColor.identifier
+            case .fontBorder(texts: let memeTexts):
+                selectedColor = memeTexts.first!.borderColor.identifier
+            }
+            
+            vc.delegate = self
+            vc.setArguments(colorFor: colorFor, currentColor: selectedColor);
+        }
+    }
+    
+    
+    func chooseBackgroundColor(){
+        performSegue(withIdentifier: "chooseColorSegue", sender: MemeColor.ColorFor.background)
+    }
+    
+    func chooseTextBorderColor(){
+        performSegue(withIdentifier: "chooseColorSegue", sender: MemeColor.ColorFor.fontBorder(texts: Array(memeTexts.keys))) // Change all texts for now
+    }
+    
+    func chooseTextColor(){
+        performSegue(withIdentifier: "chooseColorSegue", sender: MemeColor.ColorFor.fontColor(texts: Array(memeTexts.keys))) // Change all texts for now
+    }
+    
+    func setImage(_ image: UIImage?){
+        imageView.image = image
+    }
+    
+    func updateBackgroundColor(_ color: MemeColor?){
+        view.backgroundColor = color?.color
+    }
+    
+    func updateTextColor(color: MemeColor, memeText: MemeText){
+        var newText = memeText
+        newText.textColor = color
+        
+        let view = memeTextViews.first { (field: UITextField?) -> Bool in // Overkill for now - but allows changing colors for one field at a time for future
+            field?.accessibilityIdentifier == memeText.viewIdentifier
+        }!!
+        
+        memeTexts.removeValue(forKey: memeText)
+        memeTexts[newText] = view
+        
+        updateTextAttributes(view: view, memeText: newText)
+    }
+    
+    func updateTextBorder(color: MemeColor, memeText: MemeText){
+        var newText = memeText
+        newText.borderColor = color
+        let view = memeTextViews.first { (field: UITextField?) -> Bool in // Overkill for now - but allows changing colors for one field at a time for future
+            field?.accessibilityIdentifier == memeText.viewIdentifier
+        }!!
+        
+        memeTexts.removeValue(forKey: memeText)
+        memeTexts[newText] = view
+        
+        updateTextAttributes(view: view, memeText: newText)
+    }
+    
+    func showAbout(){
+        performSegue(withIdentifier: "showAboutSegue", sender: nil)
+    }
+    
+    
+    func updateTextAttributes(view: UITextField, memeText: MemeText){
+        let textAttributes = memeText.createTextAttributes()        
+        let attributedString = NSAttributedString(string: memeText.text ?? memeText.defaultText ?? "", attributes: textAttributes)
+
+        view.defaultTextAttributes = textAttributes
+        view.attributedText = attributedString
+    }
+    
+    func startOver(){
+        cancelEditing()
+        memeTexts.forEach { (memeText, view) in
+            view.delegate = self
+            view.defaultTextAttributes = memeText.createTextAttributes()
+            view.textColor = memeText.textColor.color
+            view.textAlignment = .center
+            view.text = memeText.defaultText
+        }
+        showNoImageOverlay()
+        shareButton.isEnabled = false
+        cancelButton.isEnabled = false
+    }
+    
+    func cancelEditing(){
+        memeTexts.values.forEach { (field: UITextField) in
+            field.endEditing(true)
+        }
     }
     
     @IBAction func shareClicked(_ sender: Any) {
+        cancelEditing()
         let meme = createMeme()
         
-        let sharingItems = [ meme ]
-        let activityViewController = UIActivityViewController(activityItems: sharingItems, applicationActivities: nil)
-        activityViewController.popoverPresentationController?.sourceView = self.view
+        if(meme == nil){
+            let alert = UIAlertController(title: "Something went wrong - image couldn't be generated", message: "Try again...", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+        }else{
+            let sharingItems = [ meme ]
+            let activityViewController = UIActivityViewController(activityItems: sharingItems as [Any], applicationActivities: nil)
+            activityViewController.popoverPresentationController?.sourceView = self.view
+            
+            self.present(activityViewController, animated: true, completion: nil)
+        }
+    }
+    @IBAction func cancelClicked(_ sender: Any) {
+        startOverClicked()
+    }
+    
+    @IBAction func showMore(_ sender: Any) {
+        cancelEditing()
+        let moreMenu = UIAlertController(title: nil, message: "Choose action", preferredStyle: .actionSheet)
+        let clearAction = UIAlertAction(title: "Start over", style: .destructive, handler:{ (UIAlertAction)in
+            self.startOverClicked()
+        })
+        let chooseBackgroundColor = UIAlertAction(title: "Choose background color", style: .default, handler: {(UIAlertAction)in
+            self.chooseBackgroundColor()
+        })
         
-        self.present(activityViewController, animated: true, completion: nil)
+        let chooseBorderColor = UIAlertAction(title: "Choose text border color", style: .default, handler: {(UIAlertAction)in
+            self.chooseTextBorderColor()
+        })
+        
+        let chooseTextColor = UIAlertAction(title: "Choose text color", style: .default, handler: {(UIAlertAction)in
+            self.chooseTextColor()
+        })
+        
+        let about = UIAlertAction(title: "About me and app", style: .default, handler: {(UIAlertAction)in
+            self.showAbout()
+        })
+        let cancel = UIAlertAction(title: "Cancel", style: .cancel)
+    
+        moreMenu.addAction(clearAction)
+        moreMenu.addAction(chooseBackgroundColor)
+        moreMenu.addAction(chooseBorderColor)
+        moreMenu.addAction(chooseTextColor)
+        moreMenu.addAction(about)
+        moreMenu.addAction(cancel)
+        
+        self.present(moreMenu, animated: true, completion: nil)
     }
 }
 
@@ -123,10 +278,8 @@ extension MemeEditorViewController: UIImagePickerControllerDelegate, UINavigatio
     
     
     /// Called when image is picked.
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]) {
-        
-        let image = info[UIImagePickerControllerOriginalImage] as? UIImage
-        imageView.image = image
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        imageView.image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage
         
         dismiss(animated: true, completion: hideNoImageOverlay)
     }
@@ -141,8 +294,10 @@ extension MemeEditorViewController: UIImagePickerControllerDelegate, UINavigatio
 // MARK: - UITextFieldDelegate
 extension MemeEditorViewController: UITextFieldDelegate{
     func textFieldDidBeginEditing(_ textField: UITextField) {
-        let type = TextTypes(rawValue: textField.tag) ?? .top
-        if textField.text == defaultTexts[type] {
+        let memeText = memeTexts.keys.first { (text: MemeText) in
+            textField.accessibilityIdentifier == text.viewIdentifier
+        }
+        if(memeText?.defaultText == textField.text){
             textField.text = ""
         }
     }
@@ -155,29 +310,64 @@ extension MemeEditorViewController: UITextFieldDelegate{
 
 // MARK: Keyboard state change
 extension MemeEditorViewController{
-    func subscribeToKeyboardShowStateChangedNotification(){
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: .UIKeyboardWillShow, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: .UIKeyboardWillHide, object: nil)
+    func subscribeKeyboardShowHide(){
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+        
+        topField.addTarget(self, action: #selector(topFieldEditingStarted), for: .editingDidBegin)
+        topField.addTarget(self, action: #selector(topFieldEditingEnded), for: .editingDidEnd)
     }
     
-    func unsubscribeToKeyboardShowStateChangedNotification(){
-        NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillShow, object: nil)
-        NotificationCenter.default.removeObserver(self, name: .UIKeyboardWillHide, object: nil)
+    @objc func topFieldEditingStarted(){
+        editingTopField = true
+        resetFrameOrigin()
+    }
+    
+    @objc func topFieldEditingEnded(){
+        editingTopField = false
+    }
+    
+    func unsubscribeKeyboardShowHide(){
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
 
     }
     
     @objc func keyboardWillShow(_ notification : Notification){
-        view.frame.origin.y = -getKeyboardHeight(notification)
+        if(!editingTopField){
+            view.frame.origin.y = -getKeyboardHeight(notification)
+        }
     }
     
     @objc func keyboardWillHide(_ notification : Notification){
+        resetFrameOrigin()
+    }
+    
+    func resetFrameOrigin(){
         view.frame.origin.y = 0
     }
     
     func getKeyboardHeight(_ notification : Notification) -> CGFloat{
         let userInfo = notification.userInfo
-        let keyboardSize = userInfo![UIKeyboardFrameEndUserInfoKey] as! NSValue
+        let keyboardSize = userInfo![UIResponder.keyboardFrameEndUserInfoKey] as! NSValue
         return keyboardSize.cgRectValue.height
     }
 }
 
+// MARK: ChooseColorDelegate
+extension MemeEditorViewController: ChooseColorDelegate{
+    func colorChosen(colorFor: MemeColor.ColorFor, newColor: MemeColor) {
+            switch(colorFor){
+            case .background:
+                    updateBackgroundColor(newColor)
+            case .fontColor(texts: let texts):
+                texts.forEach { (text: MemeText) in
+                    updateTextColor(color: newColor, memeText: text)
+                }
+            case .fontBorder(texts: let texts):
+                texts.forEach { (text: MemeText) in
+                    updateTextBorder(color: newColor, memeText: text)
+                }
+        }
+    }
+}

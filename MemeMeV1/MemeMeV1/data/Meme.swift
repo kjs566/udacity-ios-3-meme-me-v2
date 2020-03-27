@@ -10,16 +10,14 @@ import Foundation
 import UIKit
 
 class Meme : NSObject, UIActivityItemSource{
-    let topText : String
-    let bottomText : String
+    let texts: [MemeText]
     let originalImage : UIImage
     let memedImage : UIImage
     
-    init(topText: String, bottomText: String, originalImage: UIImage, memedImage: UIImage){
-        self.topText = topText
-        self.bottomText = bottomText
-        self.originalImage = originalImage
+    init(texts: [MemeText], originalImage: UIImage, memedImage: UIImage){
+        self.texts = texts
         self.memedImage = memedImage
+        self.originalImage = originalImage
         super.init()
     }
     
@@ -28,7 +26,7 @@ class Meme : NSObject, UIActivityItemSource{
         return memedImage
     }
     
-    func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivityType?) -> Any? {
+    func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivity.ActivityType?) -> Any? {
         return memedImage
     }
 }
