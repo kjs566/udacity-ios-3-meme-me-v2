@@ -12,6 +12,16 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    
+    var shareData = [
+        Meme(texts: [MemeText(viewIdentifier: "top", position: .top), MemeText(viewIdentifier: "bottom", position: .bottom)], originalImage: #imageLiteral(resourceName: "AlbumIcon"), memedImage: #imageLiteral(resourceName: "CameraIcon")),
+        Meme(texts: [MemeText(viewIdentifier: "top", position: .top), MemeText(viewIdentifier: "bottom", position: .bottom)], originalImage: #imageLiteral(resourceName: "AlbumIcon"), memedImage: #imageLiteral(resourceName: "CameraIcon")),
+        Meme(texts: [MemeText(viewIdentifier: "top", position: .top), MemeText(viewIdentifier: "bottom", position: .bottom)], originalImage: #imageLiteral(resourceName: "AlbumIcon"), memedImage: #imageLiteral(resourceName: "CameraIcon")),
+        Meme(texts: [MemeText(viewIdentifier: "top", position: .top), MemeText(viewIdentifier: "bottom", position: .bottom)], originalImage: #imageLiteral(resourceName: "AlbumIcon"), memedImage: #imageLiteral(resourceName: "CameraIcon")),
+        Meme(texts: [MemeText(viewIdentifier: "top", position: .top), MemeText(viewIdentifier: "bottom", position: .bottom)], originalImage: #imageLiteral(resourceName: "AlbumIcon"), memedImage: #imageLiteral(resourceName: "CameraIcon")),
+        Meme(texts: [MemeText(viewIdentifier: "top", position: .top), MemeText(viewIdentifier: "bottom", position: .bottom)], originalImage: #imageLiteral(resourceName: "AlbumIcon"), memedImage: #imageLiteral(resourceName: "CameraIcon")),
+        Meme(texts: [MemeText(viewIdentifier: "top", position: .top), MemeText(viewIdentifier: "bottom", position: .bottom)], originalImage: #imageLiteral(resourceName: "AlbumIcon"), memedImage: #imageLiteral(resourceName: "CameraIcon"))
+    ]
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {

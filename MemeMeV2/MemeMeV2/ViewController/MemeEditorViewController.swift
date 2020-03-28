@@ -17,7 +17,6 @@ class MemeEditorViewController: UIViewController {
     @IBOutlet weak var topField: UITextField!
     @IBOutlet weak var bottomField: UITextField!
     @IBOutlet weak var shareButton: UIBarButtonItem!
-    @IBOutlet weak var cancelButton: UIBarButtonItem!
     @IBOutlet weak var bottomBar: UIToolbar!
     @IBOutlet weak var noImageOverview: UIView!
     
@@ -87,7 +86,6 @@ class MemeEditorViewController: UIViewController {
             return
         })
         shareButton.isEnabled = true
-        cancelButton.isEnabled = true
     }
     
     func showNoImageOverlay(){
@@ -196,7 +194,6 @@ class MemeEditorViewController: UIViewController {
         }
         showNoImageOverlay()
         shareButton.isEnabled = false
-        cancelButton.isEnabled = false
     }
     
     func cancelEditing(){
