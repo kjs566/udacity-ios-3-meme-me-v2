@@ -23,12 +23,15 @@ class MemeEditorViewController: UIViewController {
     var backgroundColor = MemeColor.availableColors[.white]!
     var editingTopField = false
     
-    lazy var memeTextViews = [ topField, bottomField ]
     
-    lazy var memeTexts: [MemeTextPosition : MemeText] = [
-        .top: MemeText(viewIdentifier: topField!.accessibilityIdentifier!, position: .top),
-        .bottom : MemeText(viewIdentifier: bottomField!.accessibilityIdentifier!, position: .bottom)
+    lazy var defaultMemeTexts: [MemeText] = [
+        MemeText(viewIdentifier: "top", position: .top),
+        MemeText(viewIdentifier: "bottom", position: .bottom)
     ]
+    lazy var defaultMeme = Meme(texts: defaultMemeTexts, originalImage: nil, memedImage: nil)
+    var meme : Meme!
+    
+    lazy var memeTextViews = [ topField, bottomField ]
     
     lazy var memeTextPositionViews : [MemeTextPosition: UITextField] = [
         .top: topField,
@@ -43,16 +46,56 @@ class MemeEditorViewController: UIViewController {
         subscribeKeyboardShowHide()
     }
     
-    func hasDeviceCamera() -> Bool{
-        return UIImagePickerController.isSourceTypeAvailable(.camera)
-    }
-    
     override func viewDidLoad() {
-        startOver()
+        if(meme == nil){
+            meme = defaultMeme
+        }
+        setupViews()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         unsubscribeKeyboardShowHide()
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if(segue.destination is ChooseColorViewController && sender is
+            MemeColor.ColorFor){
+            let vc = segue.destination as! ChooseColorViewController
+            let colorFor = sender as! MemeColor.ColorFor
+            var selectedColor : MemeColor.ColorIdentifier = .white
+            switch colorFor {
+            case .background:
+                selectedColor = backgroundColor.identifier
+            case .fontColor(texts: let memeTexts):
+                selectedColor = memeTexts.first!.textColor.identifier
+            case .fontBorder(texts: let memeTexts):
+                selectedColor = memeTexts.first!.borderColor.identifier
+            }
+            
+            vc.delegate = self
+            vc.setArguments(colorFor: colorFor, currentColor: selectedColor);
+        }
+    }
+    
+    func setupViews(){
+        cancelEditing()
+        memeTextViews.forEach { (field: UITextField?) in
+            field?.delegate = self
+        }
+        meme.texts.forEach { (memeText) in
+            updateMemeTextView(memeText)
+        }
+        updateBackgroundColor()
+        showNoImageOverlay()
+        shareButton.isEnabled = meme.originalImage != nil
+    }
+    
+    func setArguments(meme: Meme?){
+        self.meme = meme
+    }
+    
+    func hasDeviceCamera() -> Bool{
+        return UIImagePickerController.isSourceTypeAvailable(.camera)
     }
     
     func createMeme() -> Meme?{
@@ -60,8 +103,7 @@ class MemeEditorViewController: UIViewController {
         if(memedImage == nil || imageView.image == nil){
             return nil
         }
-        let meme = Meme(texts: Array(memeTexts.values), originalImage: imageView.image!, memedImage: memedImage!)
-        
+        meme.memedImage = memedImage!
         return meme
     }
     
@@ -100,7 +142,7 @@ class MemeEditorViewController: UIViewController {
         let startOverAlert = UIAlertController(title: "Do you realy want to start over?", message: "Your current progress will be deleted.", preferredStyle: .alert)
     
         let startOverAction = UIAlertAction(title: "Start over", style: .destructive) { (UIAlertAction) in
-            self.startOver()
+            self.setupViews()
         }
         
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
@@ -109,63 +151,47 @@ class MemeEditorViewController: UIViewController {
         self.present(startOverAlert, animated: true, completion: nil)
     }
     
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if(segue.destination is ChooseColorViewController && sender is
-            MemeColor.ColorFor){
-            let vc = segue.destination as! ChooseColorViewController
-            let colorFor = sender as! MemeColor.ColorFor
-            var selectedColor : MemeColor.ColorIdentifier = .white
-            switch colorFor {
-            case .background:
-                selectedColor = backgroundColor.identifier
-            case .fontColor(texts: let memeTexts):
-                selectedColor = memeTexts.first!.textColor.identifier
-            case .fontBorder(texts: let memeTexts):
-                selectedColor = memeTexts.first!.borderColor.identifier
-            }
-            
-            vc.delegate = self
-            vc.setArguments(colorFor: colorFor, currentColor: selectedColor);
-        }
-    }
-    
     
     func chooseBackgroundColor(){
         performSegue(withIdentifier: "chooseColorSegue", sender: MemeColor.ColorFor.background)
     }
     
     func chooseTextBorderColor(){
-        performSegue(withIdentifier: "chooseColorSegue", sender: MemeColor.ColorFor.fontBorder(texts: Array(memeTexts.values))) // Change all texts for now
+        performSegue(withIdentifier: "chooseColorSegue", sender: MemeColor.ColorFor.fontBorder(texts: Array(meme.texts))) // Change all texts for now
     }
     
     func chooseTextColor(){
-        performSegue(withIdentifier: "chooseColorSegue", sender: MemeColor.ColorFor.fontColor(texts: Array(memeTexts.values))) // Change all texts for now
+        performSegue(withIdentifier: "chooseColorSegue", sender: MemeColor.ColorFor.fontColor(texts: Array(meme.texts))) // Change all texts for now
     }
     
     func setImage(_ image: UIImage?){
         imageView.image = image
     }
     
-    func updateBackgroundColor(_ color: MemeColor?){
-        view.backgroundColor = color?.color
+    func changeBackgroundColor(_ color: MemeColor?){
+        meme.backgroundColor = color
+        updateBackgroundColor()
     }
     
-    func updateTextColor(color: MemeColor, memeText: MemeText){
+    func updateBackgroundColor(){
+        view.backgroundColor = meme.backgroundColor?.color
+    }
+    
+    func changeTextColor(color: MemeColor, memeText: MemeText){
         memeText.textColor = color
-        
-        let view = memeTextViews.first { (field: UITextField?) -> Bool in // Overkill for now - but allows changing colors for one field at a time for future
-            field?.accessibilityIdentifier == memeText.viewIdentifier
-        }!!
-        
-        updateTextAttributes(view: view, memeText: memeText)
+        updateMemeTextView(memeText)
     }
     
-    func updateTextBorder(color: MemeColor, memeText: MemeText){
+    func changeTextBorder(color: MemeColor, memeText: MemeText){
         memeText.borderColor = color
+        updateMemeTextView(memeText)
+    }
+    
+    func updateMemeTextView(_ memeText: MemeText){
         let view = memeTextViews.first { (field: UITextField?) -> Bool in // Overkill for now - but allows changing colors for one field at a time for future
             field?.accessibilityIdentifier == memeText.viewIdentifier
         }!!
-    
+        
         updateTextAttributes(view: view, memeText: memeText)
     }
     
@@ -180,20 +206,6 @@ class MemeEditorViewController: UIViewController {
 
         view.defaultTextAttributes = textAttributes
         view.attributedText = attributedString
-    }
-    
-    func startOver(){
-        cancelEditing()
-        memeTexts.forEach { (position, memeText) in
-            let view = memeTextPositionViews[position]!
-            view.delegate = self
-            view.defaultTextAttributes = memeText.createTextAttributes()
-            view.textColor = memeText.textColor.color
-            view.textAlignment = .center
-            view.text = memeText.defaultText
-        }
-        showNoImageOverlay()
-        shareButton.isEnabled = false
     }
     
     func cancelEditing(){
@@ -216,9 +228,6 @@ class MemeEditorViewController: UIViewController {
             
             self.present(activityViewController, animated: true, completion: nil)
         }
-    }
-    @IBAction func cancelClicked(_ sender: Any) {
-        startOverClicked()
     }
     
     @IBAction func showMore(_ sender: Any) {
@@ -289,7 +298,7 @@ extension MemeEditorViewController: UIImagePickerControllerDelegate, UINavigatio
 // MARK: - UITextFieldDelegate
 extension MemeEditorViewController: UITextFieldDelegate{
     func textFieldDidBeginEditing(_ textField: UITextField) {
-        let memeText = memeTexts.values.first { (text: MemeText) in
+        let memeText = meme.texts.first { (text: MemeText) in
             textField.accessibilityIdentifier == text.viewIdentifier
         }
         if(memeText?.defaultText == textField.text){
@@ -298,7 +307,7 @@ extension MemeEditorViewController: UITextFieldDelegate{
     }
     
     func textFieldDidEndEditing(_ textField: UITextField){
-        let memeText = memeTexts.values.first { (text: MemeText) in
+        let memeText = meme.texts.first { (text: MemeText) in
             textField.accessibilityIdentifier == text.viewIdentifier
         }
         memeText!.text = textField.text
@@ -362,14 +371,14 @@ extension MemeEditorViewController: ChooseColorDelegate{
     func colorChosen(colorFor: MemeColor.ColorFor, newColor: MemeColor) {
             switch(colorFor){
             case .background:
-                    updateBackgroundColor(newColor)
+                    changeBackgroundColor(newColor)
             case .fontColor(texts: let texts):
                 texts.forEach { (text: MemeText) in
-                    updateTextColor(color: newColor, memeText: text)
+                    changeTextColor(color: newColor, memeText: text)
                 }
             case .fontBorder(texts: let texts):
                 texts.forEach { (text: MemeText) in
-                    updateTextBorder(color: newColor, memeText: text)
+                    changeTextBorder(color: newColor, memeText: text)
                 }
         }
     }

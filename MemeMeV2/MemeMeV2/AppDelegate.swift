@@ -13,7 +13,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
     
-    var shareData = [
+    var sharedData = [
         Meme(texts: [MemeText(viewIdentifier: "top", position: .top), MemeText(viewIdentifier: "bottom", position: .bottom)], originalImage: #imageLiteral(resourceName: "AlbumIcon"), memedImage: #imageLiteral(resourceName: "CameraIcon")),
         Meme(texts: [MemeText(viewIdentifier: "top", position: .top), MemeText(viewIdentifier: "bottom", position: .bottom)], originalImage: #imageLiteral(resourceName: "AlbumIcon"), memedImage: #imageLiteral(resourceName: "CameraIcon")),
         Meme(texts: [MemeText(viewIdentifier: "top", position: .top), MemeText(viewIdentifier: "bottom", position: .bottom)], originalImage: #imageLiteral(resourceName: "AlbumIcon"), memedImage: #imageLiteral(resourceName: "CameraIcon")),
