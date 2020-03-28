@@ -26,9 +26,14 @@ class MemeEditorViewController: UIViewController {
     
     lazy var memeTextViews = [ topField, bottomField ]
     
-    lazy var memeTexts : [MemeText: UITextField] = [
-        MemeText(viewIdentifier: topField!.accessibilityIdentifier! ,position: .top) : topField,
-        MemeText(viewIdentifier: bottomField!.accessibilityIdentifier!, position: .bottom) : bottomField
+    lazy var memeTexts: [MemeTextPosition : MemeText] = [
+        .top: MemeText(viewIdentifier: topField!.accessibilityIdentifier!, position: .top),
+        .bottom : MemeText(viewIdentifier: bottomField!.accessibilityIdentifier!, position: .bottom)
+    ]
+    
+    lazy var memeTextPositionViews : [MemeTextPosition: UITextField] = [
+        .top: topField,
+        .bottom : bottomField
     ]
     
     override func viewWillAppear(_ animated: Bool) {
@@ -56,7 +61,7 @@ class MemeEditorViewController: UIViewController {
         if(memedImage == nil || imageView.image == nil){
             return nil
         }
-        let meme = Meme(texts: Array(memeTexts.keys), originalImage: imageView.image!, memedImage: memedImage!)
+        let meme = Meme(texts: Array(memeTexts.values), originalImage: imageView.image!, memedImage: memedImage!)
         
         return meme
     }
@@ -132,11 +137,11 @@ class MemeEditorViewController: UIViewController {
     }
     
     func chooseTextBorderColor(){
-        performSegue(withIdentifier: "chooseColorSegue", sender: MemeColor.ColorFor.fontBorder(texts: Array(memeTexts.keys))) // Change all texts for now
+        performSegue(withIdentifier: "chooseColorSegue", sender: MemeColor.ColorFor.fontBorder(texts: Array(memeTexts.values))) // Change all texts for now
     }
     
     func chooseTextColor(){
-        performSegue(withIdentifier: "chooseColorSegue", sender: MemeColor.ColorFor.fontColor(texts: Array(memeTexts.keys))) // Change all texts for now
+        performSegue(withIdentifier: "chooseColorSegue", sender: MemeColor.ColorFor.fontColor(texts: Array(memeTexts.values))) // Change all texts for now
     }
     
     func setImage(_ image: UIImage?){
@@ -148,30 +153,22 @@ class MemeEditorViewController: UIViewController {
     }
     
     func updateTextColor(color: MemeColor, memeText: MemeText){
-        var newText = memeText
-        newText.textColor = color
+        memeText.textColor = color
         
         let view = memeTextViews.first { (field: UITextField?) -> Bool in // Overkill for now - but allows changing colors for one field at a time for future
             field?.accessibilityIdentifier == memeText.viewIdentifier
         }!!
         
-        memeTexts.removeValue(forKey: memeText)
-        memeTexts[newText] = view
-        
-        updateTextAttributes(view: view, memeText: newText)
+        updateTextAttributes(view: view, memeText: memeText)
     }
     
     func updateTextBorder(color: MemeColor, memeText: MemeText){
-        var newText = memeText
-        newText.borderColor = color
+        memeText.borderColor = color
         let view = memeTextViews.first { (field: UITextField?) -> Bool in // Overkill for now - but allows changing colors for one field at a time for future
             field?.accessibilityIdentifier == memeText.viewIdentifier
         }!!
-        
-        memeTexts.removeValue(forKey: memeText)
-        memeTexts[newText] = view
-        
-        updateTextAttributes(view: view, memeText: newText)
+    
+        updateTextAttributes(view: view, memeText: memeText)
     }
     
     func showAbout(){
@@ -189,7 +186,8 @@ class MemeEditorViewController: UIViewController {
     
     func startOver(){
         cancelEditing()
-        memeTexts.forEach { (memeText, view) in
+        memeTexts.forEach { (position, memeText) in
+            let view = memeTextPositionViews[position]!
             view.delegate = self
             view.defaultTextAttributes = memeText.createTextAttributes()
             view.textColor = memeText.textColor.color
@@ -202,7 +200,7 @@ class MemeEditorViewController: UIViewController {
     }
     
     func cancelEditing(){
-        memeTexts.values.forEach { (field: UITextField) in
+        memeTextViews.forEach { (field: UITextField!) in
             field.endEditing(true)
         }
     }
@@ -294,13 +292,21 @@ extension MemeEditorViewController: UIImagePickerControllerDelegate, UINavigatio
 // MARK: - UITextFieldDelegate
 extension MemeEditorViewController: UITextFieldDelegate{
     func textFieldDidBeginEditing(_ textField: UITextField) {
-        let memeText = memeTexts.keys.first { (text: MemeText) in
+        let memeText = memeTexts.values.first { (text: MemeText) in
             textField.accessibilityIdentifier == text.viewIdentifier
         }
         if(memeText?.defaultText == textField.text){
             textField.text = ""
         }
     }
+    
+    func textFieldDidEndEditing(_ textField: UITextField){
+        let memeText = memeTexts.values.first { (text: MemeText) in
+            textField.accessibilityIdentifier == text.viewIdentifier
+        }
+        memeText!.text = textField.text
+    }
+    
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         view.endEditing(true)

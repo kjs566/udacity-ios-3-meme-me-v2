@@ -9,17 +9,17 @@
 import Foundation
 import UIKit
 
-struct MemeText : Hashable{
+class MemeText{
     let viewIdentifier: String
-    let position : TextPosition
+    let position : MemeTextPosition
+    let defaultText: String?
     var text: String?
-    var defaultText: String?
     var borderColor: MemeColor = MemeColor.availableColors[.black]!
     var textColor: MemeColor = MemeColor.availableColors[.white]!
     var font: UIFont = UIFont(name: "HelveticaNeue-CondensedBlack", size: 40)!
     var borderWidth = -1.5
     
-    init(viewIdentifier: String, position: TextPosition) {
+    init(viewIdentifier: String, position: MemeTextPosition) {
         self.viewIdentifier = viewIdentifier
         self.position = position
         self.defaultText = position.rawValue
@@ -36,9 +36,5 @@ struct MemeText : Hashable{
             .strokeWidth: self.borderWidth,
             .paragraphStyle: paragraphStyle
         ]
-    }
-    
-    static func == (lhs: MemeText, rhs: MemeText) -> Bool {
-        return lhs.position == rhs.position
     }
 }

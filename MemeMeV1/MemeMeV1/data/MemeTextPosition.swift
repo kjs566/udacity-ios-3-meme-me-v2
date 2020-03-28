@@ -8,6 +8,6 @@
 
 import Foundation
 
-enum TextPosition: String{
+enum MemeTextPosition: String{
     case top = "TOP", bottom = "BOTTOM"
 }
