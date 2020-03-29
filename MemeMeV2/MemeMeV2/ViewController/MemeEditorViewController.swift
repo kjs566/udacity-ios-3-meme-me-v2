@@ -29,6 +29,8 @@ class MemeEditorViewController: UIViewController {
         MemeText(viewIdentifier: "bottom", position: .bottom)
     ]
     lazy var defaultMeme = Meme(texts: defaultMemeTexts, originalImage: nil, memedImage: nil)
+    
+    var originalMeme : Meme? = nil
     var meme : Meme!
     
     lazy var memeTextViews = [ topField, bottomField ]
@@ -39,6 +41,7 @@ class MemeEditorViewController: UIViewController {
     ]
     
     override func viewWillAppear(_ animated: Bool) {
+        self.tabBarController?.tabBar.isHidden = true
         if !hasDeviceCamera(){
             cameraButton.isEnabled = false
             cameraButton2.isEnabled = false
@@ -79,19 +82,26 @@ class MemeEditorViewController: UIViewController {
     
     func setupViews(){
         cancelEditing()
-        memeTextViews.forEach { (field: UITextField?) in
-            field?.delegate = self
-        }
         meme.texts.forEach { (memeText) in
             updateMemeTextView(memeText)
         }
+        memeTextViews.forEach { (field: UITextField?) in
+            field?.delegate = self
+            field?.autocapitalizationType = .allCharacters
+        }
         updateBackgroundColor()
-        showNoImageOverlay()
+        updateBackgroundImage()
+        updateNoImageOverlay()
         shareButton.isEnabled = meme.originalImage != nil
     }
     
     func setArguments(meme: Meme?){
-        self.meme = meme
+        self.originalMeme = meme
+        self.meme = (meme ?? defaultMeme).copy() as? Meme
+    }
+    
+    func isEditing() -> Bool{
+        return self.originalMeme != nil
     }
     
     func hasDeviceCamera() -> Bool{
@@ -100,7 +110,7 @@ class MemeEditorViewController: UIViewController {
     
     func createMeme() -> Meme?{
         let memedImage = generateMemedImage()
-        if(memedImage == nil || imageView.image == nil){
+        if(memedImage == nil || meme.originalImage == nil){
             return nil
         }
         meme.memedImage = memedImage!
@@ -121,21 +131,9 @@ class MemeEditorViewController: UIViewController {
         return memedImage
     }
     
-    func hideNoImageOverlay(){
-        let view = noImageOverview
-        UIView.animate(withDuration: 0.5, animations: {
-            view?.alpha = 0.0
-            return
-        })
-        shareButton.isEnabled = true
-    }
-    
-    func showNoImageOverlay(){
-        let view = noImageOverview
-        UIView.animate(withDuration: 0.5, animations: {
-            view?.alpha = 1.0
-            return
-        })
+
+    func updateNoImageOverlay(){
+        noImageOverview.isHidden = meme.originalImage != nil
     }
     
     func startOverClicked(){
@@ -164,17 +162,13 @@ class MemeEditorViewController: UIViewController {
         performSegue(withIdentifier: "chooseColorSegue", sender: MemeColor.ColorFor.fontColor(texts: Array(meme.texts))) // Change all texts for now
     }
     
-    func setImage(_ image: UIImage?){
-        imageView.image = image
-    }
-    
     func changeBackgroundColor(_ color: MemeColor?){
         meme.backgroundColor = color
         updateBackgroundColor()
     }
     
     func updateBackgroundColor(){
-        view.backgroundColor = meme.backgroundColor?.color
+        view.backgroundColor = meme.backgroundColor?.color ?? UIColor.lightGray
     }
     
     func changeTextColor(color: MemeColor, memeText: MemeText){
@@ -191,9 +185,19 @@ class MemeEditorViewController: UIViewController {
         let view = memeTextViews.first { (field: UITextField?) -> Bool in // Overkill for now - but allows changing colors for one field at a time for future
             field?.accessibilityIdentifier == memeText.viewIdentifier
         }!!
-        
         updateTextAttributes(view: view, memeText: memeText)
+        view.autocapitalizationType = .allCharacters
     }
+    
+    func changeBackgroundImage(_ image: UIImage?){
+        meme.originalImage = image
+        updateBackgroundImage()
+    }
+    
+    func updateBackgroundImage(){
+        imageView.image = meme.originalImage
+    }
+    
     
     func showAbout(){
         performSegue(withIdentifier: "showAboutSegue", sender: nil)
@@ -211,6 +215,65 @@ class MemeEditorViewController: UIViewController {
     func cancelEditing(){
         memeTextViews.forEach { (field: UITextField!) in
             field.endEditing(true)
+        }
+    }
+    
+    
+    func getAppDelegate() -> AppDelegate{
+        return UIApplication.shared.delegate as! AppDelegate
+    }
+    
+    func save(){
+        meme.memedImage = generateMemedImage()
+        if let oldMeme = originalMeme{
+            getAppDelegate().replaceMeme(oldMeme: oldMeme, newMeme: meme)
+        }else{
+            saveAsNew()
+        }
+    }
+    
+    func saveAsNew(){
+        meme.memedImage = generateMemedImage()
+        getAppDelegate().addMeme(meme)
+    }
+    
+    func pop(){
+        navigationController?.popViewController(animated: true)
+    }
+    
+    @IBAction func doneClicked(_ sender: Any) {
+        if(meme.originalImage == nil){
+            pop()
+        }else{
+            let alert = UIAlertController()
+            alert.title = "Save or discart changes?"
+            
+            let discartAction = UIAlertAction(title: "Discart", style: .destructive) { (UIAlertAction) in
+                self.pop()
+            }
+            
+            let saveAsNewAction = UIAlertAction(title: "Save as new", style: .default){
+                (UIAlertAction) in
+                self.saveAsNew()
+                self.pop()
+            }
+            
+            let saveAction = UIAlertAction(title: "Save", style: .default){
+                (UIAlertAction) in
+                self.save()
+                self.pop()
+            }
+            
+            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+            
+            alert.addAction(discartAction)
+            alert.addAction(saveAction)
+            
+            if(isEditing()){
+                alert.addAction(saveAsNewAction)
+            }
+            alert.addAction(cancelAction)
+            present(alert, animated: true, completion: nil)
         }
     }
     
@@ -283,9 +346,10 @@ extension MemeEditorViewController: UIImagePickerControllerDelegate, UINavigatio
     
     /// Called when image is picked.
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        imageView.image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage
+        let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage
+        changeBackgroundImage(image)
         
-        dismiss(animated: true, completion: hideNoImageOverlay)
+        dismiss(animated: true, completion: updateNoImageOverlay)
     }
     
     
@@ -304,6 +368,12 @@ extension MemeEditorViewController: UITextFieldDelegate{
         if(memeText?.defaultText == textField.text){
             textField.text = ""
         }
+    }
+    
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        textField.text = (textField.text! as NSString).replacingCharacters(in: range, with: string.uppercased())
+
+        return false
     }
     
     func textFieldDidEndEditing(_ textField: UITextField){
